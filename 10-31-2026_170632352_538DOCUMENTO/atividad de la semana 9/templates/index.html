@@ -2,32 +2,47 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GameZone - Panel de Ventas</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #1e3a8a; color: white; margin: 0; padding: 20px; }
-        /* Header actualizado para alinear el buscador */
-        .header { background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .container { display: flex; gap: 20px; }
-        .sidebar { background: #1e293b; width: 220px; padding: 15px; border-radius: 8px; }
-        .main { flex-grow: 1; background: #1e293b; padding: 20px; border-radius: 8px; }
-        .btn { background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin: 4px 0; display: block; width: 100%; }
-        .btn:hover { background: #2563eb; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
-        .card { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid #60a5fa; }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; color: white; margin: 0; padding: 20px; }
         
-        /* NUEVO: Clase de CSS para recortar imágenes a la medida (El truco object-fit) */
-        .img-juego { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; margin-bottom: 10px; background-color: #1e293b; }
+        /* Header actualizado para alinear el buscador */
+        .header { background: rgba(15, 23, 42, 0.9); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .buscador-box { display: flex; gap: 10px; align-items: center; }
+        .buscador-input { padding: 8px 10px; border-radius: 4px; border: 1px solid #334155; background: #1e293b; color: white; outline: none; }
+        .buscador-input:focus { border-color: #60a5fa; }
+
+        .container { display: flex; gap: 20px; align-items: flex-start; }
+        .sidebar { background: rgba(30, 41, 59, 0.9); width: 220px; padding: 15px; border-radius: 8px; flex-shrink: 0; }
+        .main { flex-grow: 1; background: rgba(30, 41, 59, 0.9); padding: 20px; border-radius: 8px; }
+
+        .btn { background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin: 4px 0; display: block; width: 100%; font-weight: bold; transition: background 0.2s; }
+        .btn:hover:not(:disabled) { background: #2563eb; }
+        .btn:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; margin-top: 15px; }
+        .card { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid #60a5fa; display: flex; flex-direction: column; }
+        .card h4 { margin: 8px 0; min-height: 38px; }
+        .card .btn { margin-top: auto; }
+
+        /* Portadas todas con la misma proporción vertical (3:4) */
+        .img-juego { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 6px; margin-bottom: 10px; background-color: #1e293b; display: block; }
     </style>
+
+    <!-- Fondo separado para futuros ajustes -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fondo.css') }}">
 </head>
 <body>
 
     <!-- BARRA SUPERIOR CON BUSCADOR -->
     <div class="header">
         <h2 style="margin: 0;">🎮 GameZone - Plataforma de Ventas</h2>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="buscador" placeholder="Buscar videojuego..." style="padding: 6px; border-radius: 4px; border: none; background: #1e293b; color: white;">
+        <div class="buscador-box">
+            <input type="text" id="buscador" class="buscador-input" placeholder="Buscar videojuego..." oninput="buscarJuego()">
             <button class="btn" style="margin: 0; width: auto;" onclick="buscarJuego()">Buscar</button>
-            <span style="margin-left: 15px;">Perfil: Admin / Developer</span>
+            <span style="margin-left: 10px;">Perfil: Admin / Developer</span>
         </div>
     </div>
 
@@ -49,7 +64,6 @@
     </div>
 
     <script>
-        // NUEVO: Variable para guardar los datos y que el buscador funcione súper rápido
         let juegosGlobales = [];
 
         async function cargarJuegos(categoria = '') {
@@ -61,21 +75,21 @@
                 const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
                 const datos = await response.json();
                 if (!response.ok) throw new Error(datos.message || 'Error al cargar');
-                
-                juegosGlobales = datos; // Guardamos en memoria
-                renderizarJuegos(juegosGlobales); // Llamamos a la función que pinta las tarjetas
+
+                juegosGlobales = datos;
+                document.getElementById('buscador').value = '';
+                renderizarJuegos(juegosGlobales);
 
             } catch (error) {
-                contenedor.textContent = error.message;
+                contenedor.textContent = `Error: ${error.message}`;
             }
         }
 
-        // NUEVO: Función separada para dibujar las tarjetas (necesaria para el buscador)
         function renderizarJuegos(datos) {
             const contenedor = document.getElementById('catalogo');
             contenedor.replaceChildren();
 
-            if (datos.length === 0) {
+            if (!datos || datos.length === 0) {
                 contenedor.textContent = 'No hay juegos disponibles.';
                 return;
             }
@@ -84,39 +98,43 @@
                 const tarjeta = document.createElement('div');
                 tarjeta.className = 'card';
 
-                // NUEVO: Integración de la imagen de portada
+                const fallbackImg = `https://placehold.co/300x400/1e293b/ffffff?text=${encodeURIComponent(juego.titulo || 'Juego')}`;
+
                 const img = document.createElement('img');
                 img.className = 'img-juego';
-                // Si la base de datos no tiene link de imagen, usa un placeholder elegante con el nombre del juego
-                img.src = juego.imagen || `https://via.placeholder.com/300x160/1e293b/ffffff?text=${encodeURIComponent(juego.titulo)}`;
+                img.src = juego.imagen || fallbackImg;
                 img.alt = `Portada de ${juego.titulo}`;
+                img.onerror = () => {
+                    img.onerror = null;
+                    img.src = fallbackImg;
+                };
                 tarjeta.appendChild(img);
 
                 const titulo = document.createElement('h4');
                 titulo.textContent = juego.titulo;
-                titulo.style.marginTop = "5px";
                 tarjeta.appendChild(titulo);
 
                 const detalles = [
-                    ['Categoría', juego.categoria],
-                    ['Precio', `$${juego.precio}`],
-                    ['Stock', juego.stock],
-                    ['Ventas', juego.ventas_totales]
+                    ['Categoría', juego.categoria ?? 'General'],
+                    ['Precio', `$${juego.precio ?? 0}`],
+                    ['Stock', juego.stock ?? 0],
+                    ['Ventas', juego.ventas_totales ?? 0]
                 ];
 
                 detalles.forEach(([etiqueta, valor]) => {
                     const parrafo = document.createElement('p');
-                    parrafo.style.margin = "5px 0";
+                    parrafo.style.margin = '4px 0';
                     const fuerte = document.createElement('strong');
                     fuerte.textContent = `${etiqueta}: `;
                     parrafo.append(fuerte, document.createTextNode(String(valor)));
                     tarjeta.appendChild(parrafo);
                 });
 
+                const sinStock = (juego.stock ?? 0) < 1;
                 const boton = document.createElement('button');
                 boton.className = 'btn';
-                boton.textContent = 'Comprar 1';
-                boton.disabled = juego.stock < 1;
+                boton.textContent = sinStock ? 'Agotado' : 'Comprar 1';
+                boton.disabled = sinStock;
                 boton.addEventListener('click', () => comprar(juego.id));
                 tarjeta.appendChild(boton);
 
@@ -124,11 +142,10 @@
             });
         }
 
-        // NUEVO: Función que ejecuta la barra de búsqueda en tiempo real
         function buscarJuego() {
-            const textoBuscado = document.getElementById('buscador').value.toLowerCase();
-            const juegosFiltrados = juegosGlobales.filter(juego => 
-                juego.titulo.toLowerCase().includes(textoBuscado)
+            const textoBuscado = document.getElementById('buscador').value.trim().toLowerCase();
+            const juegosFiltrados = juegosGlobales.filter(juego =>
+                (juego.titulo || '').toLowerCase().includes(textoBuscado)
             );
             renderizarJuegos(juegosFiltrados);
         }
@@ -142,11 +159,11 @@
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.message || 'No fue posible registrar la venta');
-                
-                alert("✅ " + data.message);
+
+                alert('✅ ' + data.message);
                 await cargarJuegos();
             } catch (error) {
-                alert("❌ " + error.message);
+                alert('❌ ' + error.message);
             }
         }
 

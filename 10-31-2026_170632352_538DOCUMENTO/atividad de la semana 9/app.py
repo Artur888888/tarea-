@@ -35,10 +35,11 @@ def inicializar_bd():
         db.create_all()
         if not db.session.query(Videojuego.id).first():
             juegos_demo = [
-                Videojuego(titulo="Elden Ring", categoria="RPG", precio=59.99, stock=15, ventas_totales=120),
-                Videojuego(titulo="FIFA 2026", categoria="Deportes", precio=69.99, stock=30, ventas_totales=350),
-                Videojuego(titulo="Cyberpunk 2077", categoria="RPG", precio=49.99, stock=10, ventas_totales=200),
-                Videojuego(titulo="God of War", categoria="Accion", precio=39.99, stock=8, ventas_totales=180),
+                Videojuego(titulo="Elden Ring", categoria="RPG", precio=59.99, stock=15, ventas_totales=120, imagen="/static/img/portadas/elden-ring.jpg"),
+                Videojuego(titulo="EA Sports FC 25", categoria="Deportes", precio=69.99, stock=30, ventas_totales=350, imagen="/static/img/portadas/fc-25.jpg"),
+                Videojuego(titulo="God of War Ragnarök", categoria="Accion", precio=39.99, stock=8, ventas_totales=180, imagen="/static/img/portadas/god-of-war.jpg"),
+                Videojuego(titulo="Grand Theft Auto V", categoria="Accion", precio=29.99, stock=20, ventas_totales=410, imagen="/static/img/portadas/gta-v.jpg"),
+                Videojuego(titulo="Plants vs. Zombies: Garden Warfare 2", categoria="Shooter", precio=19.99, stock=25, ventas_totales=240, imagen="/static/img/portadas/pvz-gw2.jpg"),
             ]
             db.session.add_all(juegos_demo)
             db.session.commit()

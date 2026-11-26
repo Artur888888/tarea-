@@ -1,0 +1,6 @@
+/* Fondo principal de GameZone */
+body {
+    background: radial-gradient(circle at top center, #1e3a8a 0%, #0f172a 55%, #020617 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+}

@@ -18,6 +18,7 @@ class Videojuego(db.Model):
     precio = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
     ventas_totales = db.Column(db.Integer, default=0, nullable=False)
+    imagen = db.Column(db.String(255), nullable=True)
 
     def to_dict(self):
         """Convierte el objeto del modelo a diccionario JSON serializable."""
@@ -28,6 +29,7 @@ class Videojuego(db.Model):
             "precio": round(float(self.precio), 2),
             "stock": self.stock,
             "ventas_totales": self.ventas_totales,
+            "imagen": self.imagen,
         }
 
 
@@ -51,8 +53,6 @@ class JuegoService:
             return None, "La cantidad debe ser un entero positivo", 400
 
         try:
-            # Una sola instrucción WHERE evita vender más unidades que las disponibles
-            # aunque lleguen varias solicitudes al mismo tiempo.
             statement = (
                 update(Videojuego)
                 .where(Videojuego.id == juego_id)
