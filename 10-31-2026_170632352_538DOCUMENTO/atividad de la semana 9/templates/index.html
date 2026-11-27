@@ -9,22 +9,22 @@
         body { font-family: Arial, sans-serif; color: white; margin: 0; padding: 20px; }
         
         /* Header actualizado para alinear el buscador */
-        .header { background: rgba(15, 23, 42, 0.9); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header { background: rgba(15, 23, 42, 0.88); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .buscador-box { display: flex; gap: 10px; align-items: center; }
         .buscador-input { padding: 8px 10px; border-radius: 4px; border: 1px solid #334155; background: #1e293b; color: white; outline: none; }
         .buscador-input:focus { border-color: #60a5fa; }
 
         .container { display: flex; gap: 20px; align-items: flex-start; }
-        .sidebar { background: rgba(30, 41, 59, 0.9); width: 210px; padding: 15px; border-radius: 8px; flex-shrink: 0; }
-        .main { flex-grow: 1; background: rgba(30, 41, 59, 0.9); padding: 20px; border-radius: 8px; }
+        .sidebar { background: rgba(30, 41, 59, 0.85); width: 210px; padding: 15px; border-radius: 8px; flex-shrink: 0; }
+        .main { flex-grow: 1; background: rgba(30, 41, 59, 0.85); padding: 20px; border-radius: 8px; }
 
         .btn { background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin: 4px 0; display: block; width: 100%; font-weight: bold; transition: background 0.2s; }
         .btn:hover:not(:disabled) { background: #2563eb; }
         .btn:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
 
-        /* Tarjetas más compactas en el catálogo */
+        /* Tarjetas compactas en el catálogo */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 15px; margin-top: 15px; }
-        .card { background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #60a5fa; display: flex; flex-direction: column; font-size: 14px; }
+        .card { background: rgba(15, 23, 42, 0.92); padding: 12px; border-radius: 8px; border: 1px solid #60a5fa; display: flex; flex-direction: column; font-size: 14px; }
         .card h4 { margin: 6px 0; min-height: 36px; font-size: 15px; }
         .card .btn { margin-top: auto; }
 
@@ -45,6 +45,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fondo.css') }}">
 </head>
 <body>
+
+    <!-- MAR DE SÍMBOLOS FLOTANTES -->
+    <canvas id="marSimbolos"></canvas>
 
     <!-- BARRA SUPERIOR CON BUSCADOR -->
     <div class="header">
@@ -75,7 +78,7 @@
     </div>
 
     <!-- VENTANA EMERGENTE (MODAL) PARA AMPLIAR JUEGO -->
-    <div id="modalJuego" class="modal-fondo" onclick="cerrarModal(event)">
+    <div id="modalJuego" class="modal-fondo" onclick="cerrarModal()">
         <div class="modal-contenido" onclick="event.stopPropagation()">
             <button class="modal-cerrar" onclick="cerrarModal()">✕</button>
             <img id="modalImg" class="modal-img" src="" alt="">
@@ -91,6 +94,107 @@
     </div>
 
     <script>
+        /* ==========================================
+           ANIMACIÓN LIGERA: MAR DE SÍMBOLOS GAMER
+           ========================================== */
+        (function iniciarMarSimbolos() {
+            const canvas = document.getElementById('marSimbolos');
+            const ctx = canvas.getContext('2d');
+            let ancho, alto, particulas = [];
+
+            // Colores clásicos suaves para no cansar la vista
+            const tipos = [
+                { forma: 'triangulo', color: 'rgba(74, 222, 128, 0.35)' }, // Verde
+                { forma: 'circulo',   color: 'rgba(248, 113, 113, 0.35)' }, // Rojo/Rosa
+                { forma: 'equis',     color: 'rgba(96, 165, 250, 0.38)' },  // Azul
+                { forma: 'cuadrado',  color: 'rgba(232, 121, 249, 0.35)' }  // Morado/Rosa
+            ];
+
+            function ajustarTamano() {
+                ancho = canvas.width = window.innerWidth;
+                alto = canvas.height = window.innerHeight;
+            }
+
+            function crearParticulas() {
+                // Cantidad ligera ideal para tablet y PC
+                const cantidad = ancho < 900 ? 22 : 36;
+                particulas = Array.from({ length: cantidad }, () => {
+                    const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+                    return {
+                        ...tipo,
+                        x: Math.random() * ancho,
+                        y: Math.random() * alto,
+                        tamano: 10 + Math.random() * 14,
+                        velY: -(0.2 + Math.random() * 0.45),   // Flotan suavemente hacia arriba
+                        ondaAmp: 12 + Math.random() * 20,      // Vaivén horizontal como olas
+                        ondaVel: 0.008 + Math.random() * 0.012,
+                        fase: Math.random() * Math.PI * 2,
+                        angulo: Math.random() * Math.PI * 2,
+                        velGiro: (Math.random() - 0.5) * 0.015
+                    };
+                });
+            }
+
+            function dibujarSimbolo(p) {
+                const desplazamientoX = Math.sin(p.fase) * p.ondaAmp;
+                ctx.save();
+                ctx.translate(p.x + desplazamientoX, p.y);
+                ctx.rotate(p.angulo);
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                const r = p.tamano / 2;
+                if (p.forma === 'circulo') {
+                    ctx.arc(0, 0, r, 0, Math.PI * 2);
+                } else if (p.forma === 'cuadrado') {
+                    ctx.rect(-r, -r, p.tamano, p.tamano);
+                } else if (p.forma === 'triangulo') {
+                    ctx.moveTo(0, -r);
+                    ctx.lineTo(r, r);
+                    ctx.lineTo(-r, r);
+                    ctx.closePath();
+                } else if (p.forma === 'equis') {
+                    ctx.moveTo(-r, -r);
+                    ctx.lineTo(r, r);
+                    ctx.moveTo(r, -r);
+                    ctx.lineTo(-r, r);
+                }
+
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            function animar() {
+                ctx.clearRect(0, 0, ancho, alto);
+                for (const p of particulas) {
+                    p.y += p.velY;
+                    p.fase += p.ondaVel;
+                    p.angulo += p.velGiro;
+
+                    // Si sale por arriba, reaparece abajo suavemente
+                    if (p.y < -30) {
+                        p.y = alto + 30;
+                        p.x = Math.random() * ancho;
+                    }
+                    dibujarSimbolo(p);
+                }
+                requestAnimationFrame(animar);
+            }
+
+            window.addEventListener('resize', () => {
+                ajustarTamano();
+                crearParticulas();
+            });
+
+            ajustarTamano();
+            crearParticulas();
+            animar();
+        })();
+
+        /* ==========================================
+           LÓGICA DE CATÁLOGO Y VENTAS
+           ========================================== */
         let juegosGlobales = [];
 
         async function cargarJuegos(categoria = '') {
